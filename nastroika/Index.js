@@ -7,7 +7,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/samurais', (req, res) => {
-  res.send('Hello samurais!')
+  res.send('Hello samurais!!!!')
 })
 // post запрос 
 app.post('/samurais', (req, res) => {

@@ -1,4 +1,5 @@
-const express = require('express')
+import express from 'express'
+
 const app = express()
 const port = 3000
 // настраиваем приложение , реагировать на запрос
@@ -13,6 +14,10 @@ app.get('/samurais', (req, res) => {
   } else {
     res.send('Hello Word!')
   }
+})
+
+app.post('/samurais', (req, res) => {
+  res.send('Hih')
 })
 
 // слушай порт и извести по старту программы 

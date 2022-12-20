@@ -2,11 +2,11 @@ import express from "express";
 
 const app = express();
 const port = 3000;
-/*
-это чтобы принимать body от клиента
-const jsonBodyMiddleware = express.json()
-app.use(jsonBodyMiddleware)
+/* это чтобы принимать body от клиента */
+const jsonBodyMiddleware = express.json();
+app.use(jsonBodyMiddleware);
 
+/*
 fetch('http://localhost:3000/courses', {method: 'POST', body : JSON.stringify({title:'dba'}), headers :{
     'content-type' : 'application/json'
 }})
@@ -94,6 +94,34 @@ app.delete("/courses/:id", (req, res) => {
 .then(json => console.log(json))
 сотрет , но вернет ошибку из-за данных реса, что они не в json
    */
+
+  res.sendStatus(204);
+});
+
+app.put("/courses/:id", (req, res) => {
+  if (!req.body.title) {
+    res.sendStatus(404);
+    return;
+  }
+
+  const foundCourse = db.courses.find((c) => c.id === +req.params.id);
+
+  if (!foundCourse) {
+    res.sendStatus(404);
+    return;
+  }
+
+  foundCourse.title = req.body.title;
+
+/* 
+ругается, но делает 
+
+fetch('http://localhost:3000/courses/1', {method: 'PUT', body : JSON.stringify({title:'dba'}), headers :{
+    'content-type' : 'application/json'
+}})
+.then(res => res.json())
+.then(json => console.log(json))
+*/
 
   res.sendStatus(204);
 });

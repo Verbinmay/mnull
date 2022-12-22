@@ -13,7 +13,7 @@ fetch('http://localhost:3000/courses', {method: 'POST', body : JSON.stringify({t
 .then(res => res.json())
 .then(json => console.log(json)) */
 
-const HTTP_STATUSES = {
+export const HTTP_STATUSES = {
   OK_200: 200,
   CREATED_201: 201,
   NO_CONTENT_204: 204,
@@ -67,6 +67,7 @@ app.get("/courses/:id", (req, res) => {
     res.sendStatus(HTTP_STATUSES.NOT_FOUND_404);
     return;
   }
+ 
   res.json(foundCourse);
 });
 
@@ -83,7 +84,7 @@ app.post("/courses", (req, res) => {
   };
   /* опять хреначим из даты число */
   db.courses.push(createdCourse);
-  res.status(HTTP_STATUSES.BAD_REQUEST_400).json(createdCourse);
+  res.status(HTTP_STATUSES.CREATED_201).json(createdCourse);
   //статус креатед будет видно в нетворке в хеадерс
   /*
   fetch('http://localhost:3000/courses', {method: 'POST', body : JSON.stringify({title:'dba'}), headers :{

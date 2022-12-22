@@ -1,6 +1,6 @@
 import express from "express";
 
-const app = express();
+export const app = express();
 const port = 3000;
 /* это чтобы принимать body от клиента */
 const jsonBodyMiddleware = express.json();
@@ -13,6 +13,14 @@ fetch('http://localhost:3000/courses', {method: 'POST', body : JSON.stringify({t
 .then(res => res.json())
 .then(json => console.log(json)) */
 
+const HTTP_STATUSES = {
+  OK_200: 200,
+  CREATED_201: 201,
+  NO_CONTENT_204: 204,
+
+  BAD_REQUEST_400: 400,
+  NOT_FOUND_404: 404,
+};
 const db = {
   courses: [
     { id: 1, title: "front-end" },
@@ -38,11 +46,10 @@ fetch('http://localhost:3000/courses?title=end', {method: 'GET'})
 .then(json => console.log(json))*/
 
   //!length -нет длинны
-  if (!foundCourse.length) {
-    res.sendStatus(404);
+ /* if (!foundCourse.length) {
+    res.sendStatus(HTTP_STATUSES.NOT_FOUND_404);
     return;
-  }
-
+  }*/
   res.json(foundCourse);
 });
 
@@ -57,7 +64,7 @@ app.get("/courses/:id", (req, res) => {
     */
 
   if (!foundCourse) {
-    res.sendStatus(404);
+    res.sendStatus(HTTP_STATUSES.NOT_FOUND_404);
     return;
   }
   res.json(foundCourse);
@@ -66,7 +73,7 @@ app.get("/courses/:id", (req, res) => {
 app.post("/courses", (req, res) => {
   //добавим проверку на наличие
   if (!req.body.title) {
-    res.sendStatus(400);
+    res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400);
     return;
   }
 
@@ -76,7 +83,7 @@ app.post("/courses", (req, res) => {
   };
   /* опять хреначим из даты число */
   db.courses.push(createdCourse);
-  res.status(201).json(createdCourse);
+  res.status(HTTP_STATUSES.BAD_REQUEST_400).json(createdCourse);
   //статус креатед будет видно в нетворке в хеадерс
   /*
   fetch('http://localhost:3000/courses', {method: 'POST', body : JSON.stringify({title:'dba'}), headers :{
@@ -95,25 +102,25 @@ app.delete("/courses/:id", (req, res) => {
 сотрет , но вернет ошибку из-за данных реса, что они не в json
    */
 
-  res.sendStatus(204);
+  res.sendStatus(HTTP_STATUSES.NO_CONTENT_204);
 });
 
 app.put("/courses/:id", (req, res) => {
   if (!req.body.title) {
-    res.sendStatus(404);
+    res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400);
     return;
   }
 
   const foundCourse = db.courses.find((c) => c.id === +req.params.id);
 
   if (!foundCourse) {
-    res.sendStatus(404);
+    res.sendStatus(HTTP_STATUSES.NOT_FOUND_404);
     return;
   }
 
   foundCourse.title = req.body.title;
 
-/* 
+  /* 
 ругается, но делает 
 
 fetch('http://localhost:3000/courses/1', {method: 'PUT', body : JSON.stringify({title:'dba'}), headers :{
@@ -123,7 +130,12 @@ fetch('http://localhost:3000/courses/1', {method: 'PUT', body : JSON.stringify({
 .then(json => console.log(json))
 */
 
-  res.sendStatus(204);
+  res.sendStatus(HTTP_STATUSES.NO_CONTENT_204);
+});
+
+app.delete("/__test__/data", (req, res) => {
+  db.courses = [];
+  res.sendStatus(HTTP_STATUSES.NO_CONTENT_204);
 });
 
 app.listen(port, () => {

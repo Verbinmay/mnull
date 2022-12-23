@@ -47,6 +47,11 @@ const db: { courses: CourseType[] } = {
   ],
 };
 
+const getCourseViewModel = (dbCourse: CourseType):CourseViewModel => {
+  return {id: dbCourse.id,
+  title: dbCourse.title}
+}
+
 app.get(
   "/courses",
   (
@@ -75,12 +80,7 @@ fetch('http://localhost:3000/courses?title=end', {method: 'GET'})
     return;
   }*/
     res.json(
-      foundCourse.map((dbCourse) => {
-        return {
-          id: dbCourse.id,
-          title: dbCourse.title,
-        };
-      })
+      foundCourse.map(getCourseViewModel)
     );
   }
 );
@@ -107,7 +107,7 @@ app.get(
       return;
     }
 
-    res.json({ id: foundCourse.id, title: foundCourse.title });
+    res.json(getCourseViewModel(foundCourse));
   }
 );
 
@@ -127,7 +127,9 @@ app.post(
     };
     /* опять хреначим из даты число */
     db.courses.push(createdCourse);
-    res.status(HTTP_STATUSES.CREATED_201).json(createdCourse);
+    res
+      .status(HTTP_STATUSES.CREATED_201)
+      .json(getCourseViewModel(createdCourse));
     //статус креатед будет видно в нетворке в хеадерс
     /*
   fetch('http://localhost:3000/courses', {method: 'POST', body : JSON.stringify({title:'dba'}), headers :{

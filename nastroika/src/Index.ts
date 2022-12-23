@@ -1,5 +1,14 @@
 import express, { Request, Response } from "express";
-import { RequestWithQuery } from "./types";
+import {
+  RequestWithBody,
+  RequestWithParams,
+  RequestWithParamsAndBody,
+  RequestWithQuery,
+} from "./types";
+import { CreateCourseModel } from "./models/CreateCourseModel";
+import { QueryCourseModel } from "./models/QueryCoursesModel";
+import { CourseViewModel } from "./models/CourseViewModel";
+import { URIParamsCourseIdModel } from "./models/URIParamsCourseIdModel";
 
 export const app = express();
 const port = 3000;
@@ -26,21 +35,27 @@ export const HTTP_STATUSES = {
 type CourseType = {
   id: number;
   title: string;
+  studentsCount: number;
 };
 
 const db: { courses: CourseType[] } = {
   courses: [
-    { id: 1, title: "front-end" },
-    { id: 2, title: "back-end" },
-    { id: 3, title: "JS" },
-    { id: 4, title: "CSS" },
+    { id: 1, title: "front-end", studentsCount: 10 },
+    { id: 2, title: "back-end", studentsCount: 10 },
+    { id: 3, title: "JS", studentsCount: 10 },
+    { id: 4, title: "CSS", studentsCount: 10 },
   ],
 };
 
 app.get(
   "/courses",
-  (req: RequestWithQuery<{ title: string }>, res: Response<CourseType[]>) => {
+  (
+    req: RequestWithQuery<QueryCourseModel>,
+    res: Response<CourseViewModel[]>
+  ) => {
     let foundCourse = db.courses;
+    /*прикол в том, что если я запрошу курсы, то увижу и счётчик студентов, хотя в res в типе у меня отдельный тип, в котором нет счётчика, потому мы мапим ниже */
+
     //это все курсы, но если вдруг есть есть в куери тайтл, то фильтруй
     if (req.query.title) {
       foundCourse = foundCourse.filter(
@@ -59,14 +74,27 @@ fetch('http://localhost:3000/courses?title=end', {method: 'GET'})
     res.sendStatus(HTTP_STATUSES.NOT_FOUND_404);
     return;
   }*/
-    res.json(foundCourse);
+    res.json(
+      foundCourse.map((dbCourse) => {
+        return {
+          id: dbCourse.id,
+          title: dbCourse.title,
+        };
+      })
+    );
   }
 );
 
 // query parametr always string
-app.get("/courses/:id", (req: Request<{ id: string }>, res) => {
-  const foundCourse = db.courses.find((c) => c.id === +req.params.id);
-  /*Интересная хуйня, мы переводим параметр знаком из строки в число + 
+
+app.get(
+  "/courses/:id",
+  (
+    req: RequestWithParams<URIParamsCourseIdModel>,
+    res: Response<CourseViewModel>
+  ) => {
+    const foundCourse = db.courses.find((c) => c.id === +req.params.id);
+    /*Интересная хуйня, мы переводим параметр знаком из строки в число + 
     req это то, что мы получаем, посмотреть надо в params 
 
     fetch('http://localhost:3000/courses/3', {method: 'GET'})
@@ -74,26 +102,28 @@ app.get("/courses/:id", (req: Request<{ id: string }>, res) => {
 .then(json => console.log(json))
     */
 
-  if (!foundCourse) {
-    res.sendStatus(HTTP_STATUSES.NOT_FOUND_404);
-    return;
-  }
+    if (!foundCourse) {
+      res.sendStatus(HTTP_STATUSES.NOT_FOUND_404);
+      return;
+    }
 
-  res.json(foundCourse);
-});
+    res.json({ id: foundCourse.id, title: foundCourse.title });
+  }
+);
 
 app.post(
   "/courses",
-  (req: Request<{}, {}, { title: string }>, res: Response<CourseType>) => {
+  (req: RequestWithBody<CreateCourseModel>, res: Response<CourseViewModel>) => {
     //добавим проверку на наличие
     if (!req.body.title) {
       res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400);
       return;
     }
 
-    const createdCourse = {
+    const createdCourse: CourseType = {
       id: +new Date(),
       title: req.body.title,
+      studentsCount: 0,
     };
     /* опять хреначим из даты число */
     db.courses.push(createdCourse);
@@ -108,21 +138,27 @@ app.post(
   }
 );
 
-app.delete("/courses/:id", (req: Request<{ id: string }>, res) => {
-  db.courses = db.courses.filter((c) => c.id !== +req.params.id);
-  /*
+app.delete(
+  "/courses/:id",
+  (req: RequestWithParams<URIParamsCourseIdModel>, res) => {
+    db.courses = db.courses.filter((c) => c.id !== +req.params.id);
+    /*
   fetch('http://localhost:3000/courses/1', {method: 'DELETE'})
 .then(res => res.json())
 .then(json => console.log(json))
 сотрет , но вернет ошибку из-за данных реса, что они не в json
    */
 
-  res.sendStatus(HTTP_STATUSES.NO_CONTENT_204);
-});
+    res.sendStatus(HTTP_STATUSES.NO_CONTENT_204);
+  }
+);
 
 app.put(
   "/courses/:id",
-  (req: Request<{ id: string }, {}, { title: string }>, res) => {
+  (
+    req: RequestWithParamsAndBody<URIParamsCourseIdModel, CreateCourseModel>,
+    res
+  ) => {
     if (!req.body.title) {
       res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400);
       return;
